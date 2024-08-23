@@ -23,3 +23,11 @@ interface Coin {
   ath_change_percentage: number;
   ath_date: string;
 }
+
+interface Post {
+  id: number;
+  created_at: string;
+  text: string;
+  coin: string;
+  user_id: string;
+}

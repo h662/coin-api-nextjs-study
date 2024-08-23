@@ -38,8 +38,6 @@ const Home: NextPage = () => {
     fetchCoins();
   }, []);
 
-  useEffect(() => console.log(coins), [coins]);
-
   if (loading) return <Flex>Loading...</Flex>;
   if (error) return <Flex>Error: {error}</Flex>;
 

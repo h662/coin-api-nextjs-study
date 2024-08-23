@@ -1,4 +1,5 @@
 import { getKoreanCurrency } from "@/lib/koreanCurrencyConverter";
+import { supabaseClient } from "@/lib/supabaseClient";
 import { useAuth } from "@/providers/AuthContext";
 import { Image } from "@chakra-ui/next-js";
 import {
@@ -14,7 +15,7 @@ import {
   Text,
   Textarea,
 } from "@chakra-ui/react";
-import { FC } from "react";
+import { FC, useState } from "react";
 
 interface CoinCardModalProps {
   isOpen: boolean;
@@ -25,7 +26,20 @@ interface CoinCardModalProps {
 const CoinCardModal: FC<CoinCardModalProps> = ({ isOpen, onClose, coin }) => {
   const athDate = new Date(coin.ath_date);
 
+  const [text, setText] = useState<string>("");
+
   const { session } = useAuth();
+
+  const onClickCreatePost = async () => {
+    if (!text || !session) return;
+
+    const { data, error } = await supabaseClient
+      .from("posts")
+      .insert({ text, coin: JSON.stringify(coin), user_id: session.user.id });
+
+    console.log("data", data);
+    console.log("error", error);
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -73,14 +87,23 @@ const CoinCardModal: FC<CoinCardModalProps> = ({ isOpen, onClose, coin }) => {
               {athDate.getDate()}일
             </Text>
           </Flex>
+          <Textarea
+            mt={4}
+            h={40}
+            resize="none"
+            isDisabled={!session}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
         </ModalBody>
-        <Textarea mt={4} h={40} resize="none" isDisabled={!session} />
 
         <ModalFooter>
-          <Button colorScheme="blue" mr={3} onClick={onClose}>
-            Close
+          <Button variant="ghost" mr={3} onClick={onClickCreatePost}>
+            글작성
           </Button>
-          <Button variant="ghost">Secondary Action</Button>
+          <Button colorScheme="red" onClick={onClose}>
+            닫기
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
