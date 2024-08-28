@@ -15,6 +15,7 @@ import {
   Text,
   Textarea,
 } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 import { FC, useState } from "react";
 
 interface CoinCardModalProps {
@@ -27,18 +28,30 @@ const CoinCardModal: FC<CoinCardModalProps> = ({ isOpen, onClose, coin }) => {
   const athDate = new Date(coin.ath_date);
 
   const [text, setText] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const { session } = useAuth();
+
+  const router = useRouter();
 
   const onClickCreatePost = async () => {
     if (!text || !session) return;
 
+    setIsLoading(true);
+
     const { data, error } = await supabaseClient
       .from("posts")
-      .insert({ text, coin: JSON.stringify(coin), user_id: session.user.id });
+      .insert({ text, coin: JSON.stringify(coin), user_id: session.user.id })
+      .select("*")
+      .single();
 
-    console.log("data", data);
-    console.log("error", error);
+    if (error) {
+      console.error("Error creating post: ", error);
+    } else {
+      router.push(`/post/${data.id}`);
+    }
+
+    setIsLoading(false);
   };
 
   return (
@@ -98,7 +111,13 @@ const CoinCardModal: FC<CoinCardModalProps> = ({ isOpen, onClose, coin }) => {
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" mr={3} onClick={onClickCreatePost}>
+          <Button
+            variant="ghost"
+            mr={3}
+            onClick={onClickCreatePost}
+            isLoading={isLoading}
+            isDisabled={isLoading}
+          >
             글작성
           </Button>
           <Button colorScheme="red" onClick={onClose}>

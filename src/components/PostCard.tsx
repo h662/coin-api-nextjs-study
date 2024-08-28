@@ -1,5 +1,5 @@
 import { getKoreanCurrency } from "@/lib/koreanCurrencyConverter";
-import { fetchPostOwner } from "@/lib/supabaseClient";
+import { fetchOwner } from "@/lib/supabaseClient";
 import { Image } from "@chakra-ui/next-js";
 import { Flex, Text } from "@chakra-ui/react";
 import { FC, useEffect, useState } from "react";
@@ -18,7 +18,7 @@ const PostCard: FC<PostCardProps> = ({ post }) => {
   const router = useRouter();
 
   useEffect(() => {
-    fetchPostOwner(post, setNickname);
+    fetchOwner(post.user_id, setNickname);
   }, []);
 
   return (

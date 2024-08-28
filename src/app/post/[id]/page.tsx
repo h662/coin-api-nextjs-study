@@ -1,7 +1,8 @@
 "use client";
 
+import CommentCard from "@/components/CommentCard";
 import { getKoreanCurrency } from "@/lib/koreanCurrencyConverter";
-import { fetchPostOwner, supabaseClient } from "@/lib/supabaseClient";
+import { fetchOwner, supabaseClient } from "@/lib/supabaseClient";
 import { useAuth } from "@/providers/AuthContext";
 import { Image } from "@chakra-ui/next-js";
 import { Button, Flex, Text, Textarea } from "@chakra-ui/react";
@@ -15,6 +16,7 @@ const Post: NextPage = () => {
   const [post, setPost] = useState<Post>();
   const [nickname, setNickname] = useState<string>("");
   const [text, setText] = useState<string>("");
+  const [comments, setComments] = useState<Comment[]>([]);
 
   const { id } = useParams();
   const router = useRouter();
@@ -26,14 +28,15 @@ const Post: NextPage = () => {
 
     const { data, error } = await supabaseClient
       .from("comments")
-      .insert({ text, post_id: id, user_id: session.user.id });
+      .insert({ text, post_id: id, user_id: session.user.id })
+      .select("*")
+      .single();
 
     if (error) {
       console.error("Error creating comment: ", error);
     } else {
-      console.log("data", data);
-
       setText("");
+      setComments([...comments, data]);
     }
   };
 
@@ -62,10 +65,8 @@ const Post: NextPage = () => {
 
       if (error) {
         console.error("Error fetching posts: ", error);
-
-        router.push("/posts");
       } else {
-        console.log(data);
+        setComments(data);
       }
     };
 
@@ -76,10 +77,12 @@ const Post: NextPage = () => {
   useEffect(() => {
     if (!post) return;
 
-    fetchPostOwner(post, setNickname);
+    fetchOwner(post.user_id, setNickname);
     setCoin(JSON.parse(post.coin));
     setCreatedAt(new Date(post.created_at));
   }, [post]);
+
+  useEffect(() => console.log(comments), [comments]);
 
   if (!post) return <Flex>Post {id}</Flex>;
 
@@ -124,6 +127,11 @@ const Post: NextPage = () => {
       <Button w="fit-content" alignSelf="end" onClick={onClickCreateComment}>
         댓글작성
       </Button>
+      <Flex flexDir="column" mt={4} gap={1}>
+        {comments.map((v) => (
+          <CommentCard key={v.id} comment={v} />
+        ))}
+      </Flex>
     </Flex>
   );
 };
